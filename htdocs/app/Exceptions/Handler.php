@@ -4,6 +4,11 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Response;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use Tymon\JWTAuth\Exceptions\UserNotDefinedException;
 
 class Handler extends ExceptionHandler
 {
@@ -46,8 +51,24 @@ class Handler extends ExceptionHandler
      * @param  \Exception  $exception
      * @return \Illuminate\Http\Response
      */
-    public function render($request, Exception $exception)
+    public function render($request, Exception $ex)
     {
-        return parent::render($request, $exception);
+        if ($ex instanceof TokenExpiredException) {
+            return response()->json(['token_expired'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($ex instanceof TokenInvalidException) {
+            return response()->json(['token_invalid'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($ex instanceof JWTException) {
+            return response()->json(['token_absent'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($ex instanceof UserNotDefinedException) {
+            return response()->json(['user_not_defined'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return parent::render($request, $ex);
     }
 }
