@@ -65,7 +65,9 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+//    'timezone' => 'UTC',
+      'timezone' => 'America/Porto_Velho',
+
 
     /*
     |--------------------------------------------------------------------------
@@ -167,6 +169,8 @@ return [
         /*
          * Package Service Providers...
          */
+        Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
+
 
         /*
          * Application Service Providers...
