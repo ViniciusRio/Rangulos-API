@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Event;
 use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use DB;
 
 class EventController extends Controller
@@ -23,9 +24,9 @@ class EventController extends Controller
     public function index()
     {
         $today = date('Y-m-d H:i:s');
-        $events = $this->event
-            ->where('end_date', '<=', DB::raw('now()'))
-            ->get();
+        $events = $this->event->get();
+//            ->where('end_date', '<=', DB::raw('now()'))
+//            ->get();
 
         return $events;
     }
@@ -123,5 +124,28 @@ class EventController extends Controller
         return response()->json([
             'error' => 'Nao foi possivel excluir'
         ], 500);
+    }
+
+    public function pastEvents()
+    {
+        $user = JWTAuth::parseToken()->toUser();
+
+        $date_now = date("Y-m-d H:i:s");
+        $pastEvents = $this->event
+            ->where('end_date' ,'<', $date_now)
+            ->get();
+
+        return $pastEvents;
+    }
+
+    public function currentEvent()
+    {
+        $date_now = date("Y-m-d H:i:s");
+        $currentEvents = $this->event
+            ->where('end_date' ,'<', $date_now)
+            ->get();
+
+        return $currentEvents;
+
     }
 }
