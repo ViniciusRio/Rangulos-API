@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Event;
+use App\Guest;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use DB;
@@ -11,9 +12,12 @@ class EventController extends Controller
 {
     protected $event;
 
+
     public function __construct(Event $event)
     {
         $this->event = $event;
+
+
     }
 
     /**
@@ -39,6 +43,8 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
+        $user = JWTAuth::parseToken()->toUser();
+
         $event = $this->event->newInstance();
         $event->title = request('title');
         $event->about = request('about');
@@ -69,6 +75,8 @@ class EventController extends Controller
      */
     public function show($id)
     {
+        $user = JWTAuth::parseToken()->toUser();
+
         $events = $this->event->find($id);
 
         return $events;
@@ -83,15 +91,15 @@ class EventController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->find($id);
-        $event->title = request('title');
-        $event->about = request('about');
-        $event->address = request('address');
-        $event->price = request('price');
-        $event->max_guests = request('max_guests');
-        $event->start_date = request('start_date');
-        $event->end_date = request('end_date');
-        $event->start_date = request('start_date');
+        $event->title = request('title') ?? $event->title;
+        $event->about = request('about') ?? $event->about;
+        $event->address = request('address') ?? $event->address;
+        $event->price = request('price') ?? $event->price;
+        $event->max_guests = request('max_guests') ?? $event->max_guests;
+        $event->start_date = request('start_date') ?? $event->start_date;
+        $event->end_date = request('end_date') ?? $event->end_date;
 
         if ($event->save()) {
             return response()->json([
@@ -113,6 +121,8 @@ class EventController extends Controller
      */
     public function destroy($id)
     {
+        $user = JWTAuth::parseToken()->toUser();
+
         $event = $this->event->find($id);
 
         if ($event->delete()) {
@@ -140,12 +150,18 @@ class EventController extends Controller
 
     public function currentEvent()
     {
-        $date_now = date("Y-m-d H:i:s");
-        $currentEvents = $this->event
-            ->where('end_date' ,'<', $date_now)
+        $now = date("Y-m-d H:i:s");
+        $user = JWTAuth::parseToken()->toUser();
+
+        $events = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
+            ->where('guests.user_id', $user->id)
+            ->where('guests.payment_confirmed', 1)
+            ->whereRaw("'$now' BETWEEN start_date AND end_date")
             ->get();
 
-        return $currentEvents;
+        return response()->json([
+            'events' => $events
+        ]);
 
     }
 }

@@ -44,8 +44,9 @@ class GuestController extends Controller
     public function store(Request $request)
     {
         $guest = $this->guest->newInstance();
+        $payment_confirmed = filter_var(request('payment_confirmed'), FILTER_VALIDATE_BOOLEAN);
 
-        $guest->payment_confirmed = request('payment_confirmed');
+        $guest->payment_confirmed = $payment_confirmed;
         $guest->event_id = request('event_id');
         $guest->user_id = request('user_id');
 
