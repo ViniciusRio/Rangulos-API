@@ -11,6 +11,7 @@ class Event extends Model
       'end_date'
     ];
 
+
     public function userCreator() 
     {
         return $this->beLongsTo(User::class, 'user_creator_id');
@@ -20,4 +21,5 @@ class Event extends Model
     {
         return $this->hasMany(Guest::class, 'event_id', 'id');
     }
+
 }
