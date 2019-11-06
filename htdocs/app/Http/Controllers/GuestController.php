@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Guest;
 use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class GuestController extends Controller
 {
@@ -102,8 +103,22 @@ class GuestController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($eventId)
     {
-        //
+        $user = JWTAuth::parseToken()->toUser();
+        $guest = $this->guest->where('user_id', $user->id)
+            ->where('event_id', $eventId)
+            ->first();
+
+        if ($guest && $guest->delete()) {
+            return response()->json([
+                'success' => 'Convidado Excluido'
+            ]);
+        }
+
+        return response()->json([
+            'error' => 'Nao foi possivel excluir o convidado'
+        ]);
     }
+
 }
