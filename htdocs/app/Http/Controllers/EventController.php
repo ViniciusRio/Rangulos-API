@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Event;
-use App\Guest;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use DB;
