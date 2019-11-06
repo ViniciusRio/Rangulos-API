@@ -43,17 +43,9 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
-        $user = JWTAuth::parseToken()->toUser();
-
+        JWTAuth::parseToken()->toUser();
         $event = $this->event->newInstance();
-        $event->title = request('title');
-        $event->about = request('about');
-        $event->address = request('address');
-        $event->price = request('price');
-        $event->max_guests = request('max_guests');
-        $event->start_date = request('start_date');
-        $event->end_date = request('end_date');
-        $event->start_date = request('start_date');
+        $event->fill(request()->params["newEvent"]);
 
         if ($event->save()) {
             return response()->json([
@@ -75,7 +67,7 @@ class EventController extends Controller
      */
     public function show($id)
     {
-        $user = JWTAuth::parseToken()->toUser();
+        JWTAuth::parseToken()->toUser();
 
         $events = $this->event->find($id);
 
@@ -100,6 +92,8 @@ class EventController extends Controller
         $event->max_guests = request('max_guests') ?? $event->max_guests;
         $event->start_date = request('start_date') ?? $event->start_date;
         $event->end_date = request('end_date') ?? $event->end_date;
+        $event->url_image = 'https://estrangeira.com.br/wp-content/uploads/2016/09/Captura-de-Tela-2016-09-12-a%CC%80s-18.36.47-602x500.png';
+
 
         if ($event->save()) {
             return response()->json([
@@ -157,11 +151,16 @@ class EventController extends Controller
             ->where('guests.user_id', $user->id)
             ->where('guests.payment_confirmed', 1)
             ->whereRaw("'$now' BETWEEN start_date AND end_date")
-            ->get();
+            ->select([
+                'events.id',
+                'events.title',
+                'events.price',
+                'events.start_date',
+                'events.url_image'
+            ])
+            ->first();
 
-        return response()->json([
-            'events' => $events
-        ]);
+           return $events;
 
     }
 }
