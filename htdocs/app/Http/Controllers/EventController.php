@@ -40,11 +40,21 @@ class EventController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store()
     {
-        JWTAuth::parseToken()->toUser();
+        $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->newInstance();
-        $event->fill(request()->params["newEvent"]);
+
+//        $event->id = request('id');
+        $event->title = request('title');
+        $event->about = request('about');
+        $event->address = request('address');
+        $event->price = request('price');
+        $event->max_guests = request('max_guests');
+        $event->start_date = request('start_date');
+        $event->end_date = request('end_date');
+        $event->url_image = 'https://estrangeira.com.br/wp-content/uploads/2016/09/Captura-de-Tela-2016-09-12-a%CC%80s-18.36.47-602x500.png';
+        $event->user_creator_id = $user->id;
 
         if ($event->save()) {
             return response()->json([
@@ -80,8 +90,9 @@ class EventController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update($id)
     {
+
         $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->find($id);
         $event->title = request('title') ?? $event->title;
@@ -92,7 +103,6 @@ class EventController extends Controller
         $event->start_date = request('start_date') ?? $event->start_date;
         $event->end_date = request('end_date') ?? $event->end_date;
         $event->url_image = 'https://estrangeira.com.br/wp-content/uploads/2016/09/Captura-de-Tela-2016-09-12-a%CC%80s-18.36.47-602x500.png';
-
 
         if ($event->save()) {
             return response()->json([
@@ -161,5 +171,16 @@ class EventController extends Controller
 
            return $events;
 
+    }
+
+    public function myEvents()
+    {
+        $user = JWTAuth::parseToken()->toUser();
+
+        $myEvents = $this->event
+            ->where('user_creator_id', $user->id)
+            ->get();
+
+        return $myEvents;
     }
 }
