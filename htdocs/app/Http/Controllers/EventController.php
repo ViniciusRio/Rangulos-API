@@ -51,7 +51,6 @@ class EventController extends Controller
         $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->newInstance();
 
-//        $event->id = request('id');
         $event->title = request('title');
         $event->about = request('about');
         $event->address = request('address');
