@@ -3,20 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Event;
+use App\Guest;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use DB;
 
 class EventController extends Controller
 {
+    protected $guest;
     protected $event;
 
 
-    public function __construct(Event $event)
+    public function __construct(Event $event, Guest $guest)
     {
         $this->event = $event;
-
-
+        $this->guest = $guest;
     }
 
     /**
@@ -26,10 +27,15 @@ class EventController extends Controller
      */
     public function index()
     {
-        $today = date('Y-m-d H:i:s');
-        $events = $this->event->get();
-//            ->where('end_date', '<=', DB::raw('now()'))
-//            ->get();
+        $user = JWTAuth::parseToken()->toUser();
+
+        $idsEvents = $this->guest->where('user_id', $user->id)
+            ->select('event_id')
+            ->pluck('event_id')
+            ->toArray();
+
+        $events = $this->event->whereNotIn('id', $idsEvents)
+            ->get();
 
         return $events;
     }
@@ -144,22 +150,22 @@ class EventController extends Controller
         $user = JWTAuth::parseToken()->toUser();
 
         $date_now = date("Y-m-d H:i:s");
-        $pastEvents = $this->event
+        $pastEvents = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
             ->where('end_date' ,'<', $date_now)
+            ->where('guests.payment_confirmed', true)
             ->get();
 
         return $pastEvents;
     }
 
-    public function currentEvent()
+    public function currentEvents()
     {
-        $now = date("Y-m-d H:i:s");
         $user = JWTAuth::parseToken()->toUser();
 
+        $now = date("Y-m-d H:i:s");
         $events = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
             ->where('guests.user_id', $user->id)
-            ->where('guests.payment_confirmed', 1)
-            ->whereRaw("'$now' BETWEEN start_date AND end_date")
+            ->where('end_date' ,'>=', $now)
             ->select([
                 'events.id',
                 'events.title',
@@ -167,10 +173,9 @@ class EventController extends Controller
                 'events.start_date',
                 'events.url_image'
             ])
-            ->first();
+            ->get();
 
            return $events;
-
     }
 
     public function myEvents()
@@ -182,5 +187,25 @@ class EventController extends Controller
             ->get();
 
         return $myEvents;
+    }
+
+    public function payEvent($id)
+    {
+        $user = JWTAuth::parseToken()->toUser();
+
+        $guest = $this->guest->where('event_id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($guest) {
+            $guest->payment_confirmed = true;
+            $guest->save();
+            sleep(5);
+
+            return true;
+        }
+
+        return false;
+
     }
 }
