@@ -145,39 +145,50 @@ class EventController extends Controller
         ], 500);
     }
 
+    /**
+     * @return mixed
+     */
     public function pastEvents()
     {
         $user = JWTAuth::parseToken()->toUser();
 
         $date_now = date("Y-m-d H:i:s");
         $pastEvents = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
+            ->where('guests.user_id', $user->id)
             ->where('end_date' ,'<', $date_now)
-            ->where('guests.payment_confirmed', true)
+            ->where('guests.payment_confirmed', 1)
             ->get();
-
         return $pastEvents;
     }
 
+    /**
+     * @return mixed
+     */
     public function currentEvents()
     {
         $user = JWTAuth::parseToken()->toUser();
 
         $now = date("Y-m-d H:i:s");
-        $events = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
-            ->where('guests.user_id', $user->id)
-            ->where('end_date' ,'>=', $now)
-            ->select([
-                'events.id',
-                'events.title',
-                'events.price',
-                'events.start_date',
-                'events.url_image'
-            ])
-            ->get();
+       $events = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
+           ->where('guests.user_id', $user->id)
+           ->where('end_date' ,'>=', $now)
+           ->select([
+               'events.id',
+               'guests.payment_confirmed',
+               'events.title',
+               'events.price',
+               'events.start_date',
+               'events.url_image'
+           ])
+           ->get();
+
 
            return $events;
     }
 
+    /**
+     * @return mixed
+     */
     public function myEvents()
     {
         $user = JWTAuth::parseToken()->toUser();
@@ -189,23 +200,24 @@ class EventController extends Controller
         return $myEvents;
     }
 
-    public function payEvent($id)
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function payEvent()
     {
         $user = JWTAuth::parseToken()->toUser();
 
-        $guest = $this->guest->where('event_id', $id)
+        $guest = $this->guest->where('event_id', request('id'))
             ->where('user_id', $user->id)
             ->first();
 
-        if ($guest) {
+        if($guest) {
             $guest->payment_confirmed = true;
             $guest->save();
-            sleep(5);
-
-            return true;
+            return response()->json(true);
         }
 
-        return false;
+        return response()->json(false);
 
     }
 }
