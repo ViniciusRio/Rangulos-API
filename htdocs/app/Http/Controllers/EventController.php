@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Event;
 use App\Guest;
-use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use DB;
 
@@ -50,7 +49,6 @@ class EventController extends Controller
     {
         $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->newInstance();
-
         $event->title = request('title');
         $event->about = request('about');
         $event->address = request('address');
@@ -83,9 +81,9 @@ class EventController extends Controller
     {
         JWTAuth::parseToken()->toUser();
 
-        $events = $this->event->find($id);
+        $event = $this->event->find($id);
 
-        return $events;
+        return $event;
     }
 
     /**
@@ -97,7 +95,6 @@ class EventController extends Controller
      */
     public function update($id)
     {
-
         $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->find($id);
         $event->title = request('title') ?? $event->title;
@@ -108,11 +105,11 @@ class EventController extends Controller
         $event->start_date = request('start_date') ?? $event->start_date;
         $event->end_date = request('end_date') ?? $event->end_date;
         $event->url_image = 'https://estrangeira.com.br/wp-content/uploads/2016/09/Captura-de-Tela-2016-09-12-a%CC%80s-18.36.47-602x500.png';
+        $event->user_creator_id = $user->id;
 
         if ($event->save()) {
             return response()->json([
-                'success' => 'Evento atualizado com sucesso',
-                'event' => $event
+                'success' => 'Evento atualizado com sucesso'
             ]);
         }
 
