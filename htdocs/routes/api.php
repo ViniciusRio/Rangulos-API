@@ -2,6 +2,8 @@
 
 Route::post('register', 'AuthController@register');
 Route::post('login', 'AuthController@login');
+Route::get('logout', 'AuthController@logout');
+Route::get('user', 'AuthController@show');
 
 Route::get('events', 'EventController@index');
 Route::get('events/current', 'EventController@currentEvents');

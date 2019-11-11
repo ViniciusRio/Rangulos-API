@@ -41,7 +41,7 @@ class AuthController extends Controller
     public function login()
     {
         $credentials = request(['email', 'password']);
-
+        
         if (!auth()->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
@@ -62,6 +62,14 @@ class AuthController extends Controller
         auth()->logout();
 
         return response()->json(['message' => 'Successfully logged out']);
+    }
+
+    public function show()
+    {
+        $userAuth = JWTAuth::parseToken()->toUser();
+        $user = $this->user->find($userAuth->id);
+
+        return $user;
     }
 
     /**
