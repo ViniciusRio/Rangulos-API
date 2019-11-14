@@ -26,6 +26,7 @@ class CreateEventsTable extends Migration
             $table->integer('user_creator_id')->unsigned()->nullable();
             $table->foreign('user_creator_id')->references('id')->on('users');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

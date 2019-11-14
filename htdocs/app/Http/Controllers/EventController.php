@@ -27,13 +27,13 @@ class EventController extends Controller
     public function index()
     {
         $user = JWTAuth::parseToken()->toUser();
-
         $idsEvents = $this->guest->where('user_id', $user->id)
             ->select('event_id')
             ->pluck('event_id')
             ->toArray();
 
         $events = $this->event->whereNotIn('id', $idsEvents)
+            ->where('user_creator_id', '!=', $user->id)
             ->get();
 
         return $events;
@@ -79,9 +79,10 @@ class EventController extends Controller
      */
     public function show($id)
     {
-        JWTAuth::parseToken()->toUser();
+        $user = JWTAuth::parseToken()->toUser();
 
         $event = $this->event->find($id);
+        $event->is_owner = $event->user_creator_id == $user->id;
 
         return $event;
     }
@@ -132,12 +133,12 @@ class EventController extends Controller
 
         if ($event->delete()) {
             return response()->json([
-                'success' => 'Evento excluido com sucesso',
+                'success' => 'Evento cancelado',
             ]);
         }
 
         return response()->json([
-            'error' => 'Nao foi possivel excluir'
+            'error' => 'Nao foi possivel cancelar evento'
         ], 500);
     }
 
@@ -150,10 +151,12 @@ class EventController extends Controller
 
         $date_now = date("Y-m-d H:i:s");
         $pastEvents = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
+            ->withTrashed()
             ->where('guests.user_id', $user->id)
             ->where('end_date' ,'<', $date_now)
             ->where('guests.payment_confirmed', 1)
             ->get();
+
         return $pastEvents;
     }
 
@@ -165,7 +168,8 @@ class EventController extends Controller
         $user = JWTAuth::parseToken()->toUser();
 
         $now = date("Y-m-d H:i:s");
-       $events = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
+        $events = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
+           ->withTrashed()
            ->where('guests.user_id', $user->id)
            ->where('end_date' ,'>=', $now)
            ->select([
@@ -174,10 +178,11 @@ class EventController extends Controller
                'events.title',
                'events.price',
                'events.start_date',
+               'events.end_date',
+               'events.deleted_at',
                'events.url_image'
            ])
            ->get();
-
 
            return $events;
     }
@@ -190,8 +195,10 @@ class EventController extends Controller
         $user = JWTAuth::parseToken()->toUser();
 
         $myEvents = $this->event
+            ->withTrashed()
             ->where('user_creator_id', $user->id)
             ->get();
+
 
         return $myEvents;
     }
