@@ -19,5 +19,6 @@ Route::get('events/past', 'EventController@pastEvents');
 
 Route::post('guest/{id}', 'GuestController@store');
 Route::delete('guest/{idEvent}', 'GuestController@destroy');
+Route::post('guest/{idEvent}/rate', 'GuestController@rate');
 Route::post('event/pay', 'EventController@payEvent');
 

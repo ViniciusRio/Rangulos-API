@@ -66,4 +66,18 @@ class GuestController extends Controller
             'error' => 'Nao foi possivel excluir o convidado'
         ]);
     }
+
+    public function rate($eventId) {
+
+        $user = JWTAuth::parseToken()->toUser();
+        $guest = $this->guest->where('user_id', $user->id)
+            ->where('event_id', $eventId)
+            ->first();
+
+        $guest->rate = request('rate');
+
+        if ($guest->save()) {
+            return response()->json(true);
+        }
+    }
 }
