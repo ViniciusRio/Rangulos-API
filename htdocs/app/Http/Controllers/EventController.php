@@ -12,7 +12,6 @@ class EventController extends Controller
     protected $guest;
     protected $event;
 
-
     public function __construct(Event $event, Guest $guest)
     {
         $this->event = $event;
@@ -33,7 +32,6 @@ class EventController extends Controller
             ->toArray();
 
         $events = $this->event->whereNotIn('id', $idsEvents)
-            ->where('user_creator_id', '!=', $user->id)
             ->get();
 
         return $events;
@@ -81,10 +79,17 @@ class EventController extends Controller
     {
         $user = JWTAuth::parseToken()->toUser();
 
-        $event = $this->event->find($id);
+        $event = $this->event->withTrashed()->find($id);
         $event->is_owner = $event->user_creator_id == $user->id;
+        $event->total_guests = $event->guests->count();
+        $owner_name = $this->event->join('users', 'events.user_creator_id', '=', 'users.id')
+            ->where('events.id', $id )
+            ->pluck('users.name')
+            ->first();
 
-        return $event;
+        $event->owner = $owner_name;
+
+        return response()->json($event);
     }
 
     /**
