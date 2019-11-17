@@ -14,7 +14,7 @@ class AddRateColunmToGuestsTable extends Migration
     public function up()
     {
         Schema::table('guests', function (Blueprint $table) {
-            $table->integer('rate');
+            $table->integer('rate')->nullable();
         });
     }
 
