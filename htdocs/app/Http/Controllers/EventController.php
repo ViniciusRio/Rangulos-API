@@ -228,4 +228,21 @@ class EventController extends Controller
         return response()->json(false);
 
     }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function restore($id)
+    {
+        JWTAuth::parseToken()->toUser();
+        
+        $this->event->withTrashed()
+            ->where('id', $id)
+            ->restore();
+
+        return response()->json(true);
+
+    }
+
 }
