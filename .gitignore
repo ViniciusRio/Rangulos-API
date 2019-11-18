@@ -3,13 +3,13 @@
 # -----------------------------------------------------------------
 
 # ignora tudo no diretório "mysql/data"
-mysql/data/
+container/mysql/data/
 
 # ignora tudo no diretório "nginx/logs"
-nginx/logs/
+container/nginx/logs/
 
 # ignora tudo no diretório "nginx/sites", exceto:
-nginx/sites/*
+container/nginx/sites/*
 !nginx/sites/default.conf
 !nginx/sites/api.dev.conf
 
