@@ -29,7 +29,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'error' => 'Nao foi possivel registrar'
+            'error' => 'Nao foi possivel registrar o usuario'
         ], 500);
     }
 
