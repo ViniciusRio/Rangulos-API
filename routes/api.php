@@ -22,5 +22,11 @@ Route::delete('guest/{idEvent}', 'GuestController@destroy');
 Route::post('guest/{idEvent}/rate', 'GuestController@rate');
 Route::post('event/pay', 'EventController@payEvent');
 Route::post('event/{id}/restore', 'EventController@restore');
+Route::post('event/{id}/upload', 'EventController@upload');
+Route::get('event/{id}/image', 'EventController@getImage');
+
+
+
+
 
 
