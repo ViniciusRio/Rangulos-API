@@ -6,6 +6,7 @@ use App\Event;
 use App\Guest;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use DB;
+use File;
 
 class EventController extends Controller
 {
@@ -245,4 +246,44 @@ class EventController extends Controller
 
     }
 
+    public function upload($id)
+    {
+        JWTAuth::parseToken()->toUser();
+
+        $event = $this->event->withTrashed()->find($id);
+        $event->url_image = request()->file('file')->storeAs('events', $id.'.jpg');
+
+        if ($event->save()) {
+            return response()->json([
+                'success' => 'Imagem salva'
+            ]);
+        }
+
+        return response()->json([
+            'error' => 'Imagem nao salva'
+        ], 500);
+
+    }
+
+    public function getImage($id)
+    {
+        JWTAuth::parseToken()->toUser();
+
+        $event = $this->event->withTrashed()->find($id);
+
+        $path = storage_path('app/' . $event->url_image);
+        
+        if (!File::exists($path)) {
+            abort(404);
+        }
+
+        $file = File::get($path);
+        $type = File::mimeType($path);
+
+        return response()->make(
+            $file, 200, [
+                'Content-Type'=> $type
+            ]
+        );
+    }
 }
