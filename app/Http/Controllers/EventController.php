@@ -55,7 +55,6 @@ class EventController extends Controller
         $event->max_guests = request('max_guests');
         $event->start_date = request('start_date');
         $event->end_date = request('end_date');
-        $event->url_image = 'https://estrangeira.com.br/wp-content/uploads/2016/09/Captura-de-Tela-2016-09-12-a%CC%80s-18.36.47-602x500.png';
         $event->user_creator_id = $user->id;
 
         if ($event->save()) {
@@ -83,12 +82,8 @@ class EventController extends Controller
         $event = $this->event->withTrashed()->find($id);
         $event->is_owner = $event->user_creator_id == $user->id;
         $event->total_guests = $event->guests->count();
-        $owner_name = $this->event->join('users', 'events.user_creator_id', '=', 'users.id')
-            ->where('events.id', $id )
-            ->pluck('users.name')
-            ->first();
-
-        $event->owner = $owner_name;
+        $event->owner = $event->userCreator->name;
+        $event->is_guest = $event->guests->where('user_id', $user->id)->count() > 0;
 
         return response()->json($event);
     }
@@ -111,7 +106,6 @@ class EventController extends Controller
         $event->max_guests = request('max_guests') ?? $event->max_guests;
         $event->start_date = request('start_date') ?? $event->start_date;
         $event->end_date = request('end_date') ?? $event->end_date;
-        $event->url_image = 'https://estrangeira.com.br/wp-content/uploads/2016/09/Captura-de-Tela-2016-09-12-a%CC%80s-18.36.47-602x500.png';
         $event->user_creator_id = $user->id;
 
         if ($event->save()) {
@@ -246,11 +240,16 @@ class EventController extends Controller
 
     }
 
+    /**
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function upload($id)
     {
         JWTAuth::parseToken()->toUser();
 
         $event = $this->event->withTrashed()->find($id);
+        // buscando e armazena em caminho especifico e com um mome unido
         $event->url_image = request()->file('file')->storeAs('events', $id.'.jpg');
 
         if ($event->save()) {
@@ -270,6 +269,11 @@ class EventController extends Controller
         JWTAuth::parseToken()->toUser();
 
         $event = $this->event->withTrashed()->find($id);
+
+        if (!$event->url_image)
+        {
+            return response()->json(null);
+        }
 
         $path = storage_path('app/' . $event->url_image);
 
