@@ -272,7 +272,7 @@ class EventController extends Controller
         $event = $this->event->withTrashed()->find($id);
 
         $path = storage_path('app/' . $event->url_image);
-        
+
         if (!File::exists($path)) {
             abort(404);
         }
