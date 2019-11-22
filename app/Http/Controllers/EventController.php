@@ -249,8 +249,10 @@ class EventController extends Controller
         JWTAuth::parseToken()->toUser();
 
         $event = $this->event->withTrashed()->find($id);
+        $path = base_path();
+        $path .= '/app/storage/app/events';
         // buscando e armazena em caminho especifico e com um mome unido
-        $event->url_image = request()->file('file')->storeAs('../../../../app/storage/app/events', $id.'.jpg');
+        $event->url_image = request()->file('file')->storeAs($path, $id.'.jpg');
 
         if ($event->save()) {
             return response()->json([
