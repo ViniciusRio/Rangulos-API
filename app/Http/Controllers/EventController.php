@@ -276,7 +276,7 @@ class EventController extends Controller
         }
 
         $path = storage_path('app/' . $event->url_image);
-
+        dd($path);
         if (!File::exists($path)) {
             abort(404);
         }
