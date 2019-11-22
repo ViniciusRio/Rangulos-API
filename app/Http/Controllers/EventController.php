@@ -251,7 +251,7 @@ class EventController extends Controller
         $event = $this->event->withTrashed()->find($id);
 
         // buscando e armazena em caminho especifico e com um mome unido
-        $event->url_image = request()->file('file')->storeAs('app/events/', $id.'.jpg');
+        $event->url_image = request()->file('file')->storeAs('events', $id.'.jpg');
 
         if ($event->save()) {
             return response()->json([
