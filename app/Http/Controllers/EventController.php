@@ -33,6 +33,7 @@ class EventController extends Controller
             ->toArray();
 
         $events = $this->event->whereNotIn('id', $idsEvents)
+            ->where('user_creator_id', '!=', $user->id)
             ->get();
 
         return $events;
@@ -277,7 +278,7 @@ class EventController extends Controller
         }
 
         $path = storage_path('app/' . $event->url_image);
-
+        
         if (!File::exists($path)) {
             abort(404);
         }
