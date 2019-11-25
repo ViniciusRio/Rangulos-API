@@ -292,4 +292,27 @@ class EventController extends Controller
             ]
         );
     }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteEvent($id)
+    {
+        $user = JWTAuth::parseToken()->toUser();
+
+        $event = $this->event->find($id);
+
+        if ($event->guests()->forceDelete()) {
+            $event->forceDelete();
+
+            return response()->json([
+                'success' => 'Evento excluido com sucesso',
+            ]);
+        }
+
+        return response()->json([
+            'error' => 'Nao foi possivel excluir evento'
+        ], 500);
+    }
 }
