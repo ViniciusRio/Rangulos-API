@@ -49,6 +49,7 @@ class EventController extends Controller
     {
         $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->newInstance();
+        dd(request()->all());
         $event->title = request('title');
         $event->about = request('about');
         $event->address = request('address');
@@ -61,7 +62,7 @@ class EventController extends Controller
         if ($event->save()) {
             return response()->json([
                 'success' => 'Evento cadastrado com sucesso',
-                'event' => $event
+                'id' => $event->id
             ]);
         }
 
@@ -79,12 +80,14 @@ class EventController extends Controller
     public function show($id)
     {
         $user = JWTAuth::parseToken()->toUser();
-
         $event = $this->event->withTrashed()->find($id);
-        $event->is_owner = $event->user_creator_id == $user->id;
+        $event->rate = $event->guests[0]->rate;
+        $event->is_owner = $event->user_creator_id == $user->id ?? null;
         $event->total_guests = $event->guests->count();
         $event->owner = $event->userCreator->name;
         $event->is_guest = $event->guests->where('user_id', $user->id)->count() > 0;
+        $event->is_paid = $event->guests->where('payment_confirmed', '=', 1 )->count() > 0;
+
 
         return response()->json($event);
     }
@@ -303,7 +306,16 @@ class EventController extends Controller
 
         $event = $this->event->find($id);
 
-        if ($event->guests()->forceDelete()) {
+        if ($event->guests) {
+            $event->guests()->forceDelete();
+            $event->forceDelete();
+
+            return response()->json([
+                'success' => 'Evento excluido com sucesso',
+            ]);
+        }
+
+        if (!$event->guests) {
             $event->forceDelete();
 
             return response()->json([
