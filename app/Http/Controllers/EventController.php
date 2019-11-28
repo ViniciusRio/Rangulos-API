@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Event;
 use App\Guest;
+use Cassandra\Date;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use DB;
 use File;
@@ -49,7 +50,6 @@ class EventController extends Controller
     {
         $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->newInstance();
-        dd(request()->all());
         $event->title = request('title');
         $event->about = request('about');
         $event->address = request('address');
@@ -81,13 +81,12 @@ class EventController extends Controller
     {
         $user = JWTAuth::parseToken()->toUser();
         $event = $this->event->withTrashed()->find($id);
-        $event->rate = $event->guests[0]->rate;
+        $event->rate = $event->guests->where('id', $user->id)->pluck('rate')->first();
         $event->is_owner = $event->user_creator_id == $user->id ?? null;
         $event->total_guests = $event->guests->count();
         $event->owner = $event->userCreator->name;
         $event->is_guest = $event->guests->where('user_id', $user->id)->count() > 0;
         $event->is_paid = $event->guests->where('payment_confirmed', '=', 1 )->count() > 0;
-
 
         return response()->json($event);
     }
@@ -154,6 +153,7 @@ class EventController extends Controller
         $user = JWTAuth::parseToken()->toUser();
 
         $date_now = date("Y-m-d H:i:s");
+
         $pastEvents = $this->event->join('guests', 'events.id', '=', 'guests.event_id')
             ->withTrashed()
             ->where('guests.user_id', $user->id)
