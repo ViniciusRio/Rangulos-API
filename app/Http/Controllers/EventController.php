@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Event;
 use App\Guest;
-use Cassandra\Date;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use DB;
 use File;
@@ -28,6 +27,8 @@ class EventController extends Controller
     public function index()
     {
         $user = JWTAuth::parseToken()->toUser();
+        $date_now = date("Y-m-d H:i:s");
+
         $idsEvents = $this->guest->where('user_id', $user->id)
             ->select('event_id')
             ->pluck('event_id')
@@ -35,6 +36,7 @@ class EventController extends Controller
 
         $events = $this->event->whereNotIn('id', $idsEvents)
             ->where('user_creator_id', '!=', $user->id)
+            ->where('end_date', '>', $date_now)
             ->get();
 
         return $events;
@@ -80,15 +82,36 @@ class EventController extends Controller
     public function show($id)
     {
         $user = JWTAuth::parseToken()->toUser();
-        $event = $this->event->withTrashed()->find($id);
-        $event->rate = $event->guests->where('id', $user->id)->pluck('rate')->first();
-        $event->is_owner = $event->user_creator_id == $user->id ?? null;
-        $event->total_guests = $event->guests->count();
-        $event->owner = $event->userCreator->name;
-        $event->is_guest = $event->guests->where('user_id', $user->id)->count() > 0;
-        $event->is_paid = $event->guests->where('payment_confirmed', '=', 1 )->count() > 0;
 
-        return response()->json($event);
+        $event = $this->event->withTrashed()->find($id);
+        $isOwner = $event->user_creator_id == $user->id ?? null;
+        $guests = [];
+
+        if ($isOwner) {
+            $guests = $event->guests()->join('users', 'users.id', '=', 'guests.user_id')
+                ->select('users.name', 'users.email', 'payment_confirmed', 'guests.created_at')
+                ->get()
+                ->toArray();
+        }
+
+        return response()->json([
+            'id' => $event->id,
+            'title' => $event->title,
+            'about' => $event->about,
+            'address' => $event->address,
+            'price' => $event->price,
+            'url_image' => $event->url_image,
+            'max_guests' => $event->max_guests,
+            'start_date' => $event->start_date->format('Y-m-d H:i:s'),
+            'end_date' => $event->end_date->format('Y-m-d H:i:s'),
+            'deleted_at' => $event->deleted_at ? $event->deleted_at->format('Y-m-d H:i:s') : null,
+            'is_owner' => $isOwner,
+            'is_guest' => $event->guests->where('user_id', $user->id)->count() > 0,
+            'is_paid' => $event->guests->where('payment_confirmed', '=', 1 )->count() > 0,
+            'total_guests' => $event->guests->count(),
+            'user_creator' => $event->userCreator,
+            'guests' => $guests
+        ]);
     }
 
     /**
@@ -159,6 +182,16 @@ class EventController extends Controller
             ->where('guests.user_id', $user->id)
             ->where('end_date' ,'<', $date_now)
             ->where('guests.payment_confirmed', 1)
+            ->select([
+                'events.id',
+                'guests.payment_confirmed',
+                'events.title',
+                'events.price',
+                'events.start_date',
+                'events.end_date',
+                'events.deleted_at',
+                'events.url_image'
+            ])
             ->get();
 
         return $pastEvents;

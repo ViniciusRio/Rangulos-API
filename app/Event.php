@@ -13,7 +13,7 @@ class Event extends Model
     protected $dates = [
       'start_date',
       'end_date',
-      'delete_at'
+      'deleted_at'
     ];
 
     public function setStartDateAttribute($value)
