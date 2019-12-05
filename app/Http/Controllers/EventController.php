@@ -35,11 +35,15 @@ class EventController extends Controller
             ->toArray();
 
         $events = $this->event->whereNotIn('id', $idsEvents)
-            ->where('user_creator_id', '!=', $user->id)
-            ->where('end_date', '>', $date_now)
-            ->get();
+//            ->where('user_creator_id', '!=', $user->id)
+            ->where('end_date', '>', $date_now);
 
-        return $events;
+        if (request()->filled('q')) {
+            $query = strtolower('%'.request('q').'%');
+            $events = $events->where(DB::raw('title'), 'LIKE', $query);
+        }
+
+        return $events->get();
     }
 
     /**
