@@ -112,7 +112,7 @@ class EventController extends Controller
             'is_owner' => $isOwner,
             'is_guest' => $event->guests->where('user_id', $user->id)->count() > 0,
             'is_paid' => $event->guests->where('payment_confirmed', '=', 1 )->count() > 0,
-            'total_guests' => $event->guests->count(),
+            'total_guests' => $event->guests->where('payment_confirmed', '=', 1)->count(),
             'user_creator' => $event->userCreator,
             'guests' => $guests
         ]);
@@ -340,20 +340,18 @@ class EventController extends Controller
     public function deleteEvent($id)
     {
         $user = JWTAuth::parseToken()->toUser();
+        $event = $this->event->withTrashed()->find($id);
 
-        $event = $this->event->find($id);
 
-        if ($event->guests) {
-            $event->guests()->forceDelete();
+        if ($event->guests()->forceDelete()) {
             $event->forceDelete();
 
             return response()->json([
-                'success' => 'Evento excluido com sucesso',
+                'success' => 'Evento e convidados excluidos com sucesso',
             ]);
         }
 
-        if (!$event->guests) {
-            $event->forceDelete();
+        if ($event->forceDelete()) {
 
             return response()->json([
                 'success' => 'Evento excluido com sucesso',
