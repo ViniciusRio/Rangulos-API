@@ -38,6 +38,7 @@ class EventController extends Controller
 //            ->where('user_creator_id', '!=', $user->id)
             ->where('end_date', '>', $date_now);
 
+
         if (request()->filled('q')) {
             $query = strtolower('%'.request('q').'%');
             $events = $events->where(DB::raw('title'), 'LIKE', $query);
@@ -55,6 +56,7 @@ class EventController extends Controller
     public function store()
     {
         $user = JWTAuth::parseToken()->toUser();
+
         $event = $this->event->newInstance();
         $event->title = request('title');
         $event->about = request('about');
@@ -65,6 +67,8 @@ class EventController extends Controller
         $event->end_date = request('end_date');
         $event->user_creator_id = $user->id;
 
+
+
         if ($event->save()) {
             return response()->json([
                 'success' => 'Evento cadastrado com sucesso',
@@ -74,6 +78,71 @@ class EventController extends Controller
 
         return response()->json([
             'error' => 'Nao foi possivel cadastrar'
+        ], 500);
+    }
+
+    public function storeFillEvents()
+    {
+        $user = JWTAuth::parseToken()->toUser();
+        $eventStaticBeans = [
+            'title' => 'Feijoada ao Sol',
+            'about' => 'Feijoada repleta de bacon e linguiça. Venha saborear. Música regional ao vivo',
+            'address' => 'R. Alm. Barroso, 2385, Ns Das Gracas - Porto Velho, RO',
+            'price' => 28,
+            'max_guests' => 15,
+            'start_date' => '2019-12-10 09:30:00',
+            'end_date' => '2019-12-12 23:30:00',
+            'url_image' => 'events/6.jpg',
+            'user_creator_id' => 8
+        ];
+        $eventStaticMeat = [
+            'title' => 'Festival da Carne',
+            'about' => 'Churrasco de qualidade com picanha e costela, além de cerveja gelada',
+            'address' => 'R. Tabajara, 2814, Liberdade - Porto Velho, RO',
+            'price' => 25,
+            'max_guests' => 20,
+            'start_date' => '2019-12-10 09:30:00',
+            'end_date' => '2019-12-13 23:30:00',
+            'url_image' => 'events/7.jpg',
+            'user_creator_id' => 9
+        ];
+        $eventStaticBrazil = [
+            'title' => 'Brasil à la carte',
+            'about' => 'Acompanhe o Campeonato Brasileiro com cerveja gelada e petiscos variados',
+            'address' => 'R. Sen. Álvaro Maia, 3323, Embratel - Porto Velho, RO',
+            'price' => 5,
+            'max_guests' => 25,
+            'start_date' => '2019-12-10 09:30:00',
+            'end_date' => '2019-12-12 23:30:00',
+            'url_image' => 'events/8.jpg',
+            'user_creator_id' => 7
+        ];
+        $eventStaticMilho = [
+            'title' => 'Festival do Milho',
+            'about' => 'Saborei receitas de milho, como: canjica, pamonha, bolos e milho cozido. Preços variados',
+            'address' => 'R. Sen. Álvaro Maia, 3323, Embratel - Porto Velho, RO',
+            'price' => 5,
+            'max_guests' => 25,
+            'start_date' => '2019-12-08 09:30:00',
+            'end_date' => '2019-12-09 18:30:00',
+            'url_image' => 'events/4.jpg',
+            'user_creator_id' => 7
+        ];
+        $guestEventMilho = [
+            'payment_confirmed' => 1,
+            'event_id' => 55,
+            'user_id' => 9
+        ];
+
+        if (DB::table('events')->insert([$eventStaticBeans, $eventStaticMeat, $eventStaticBrazil, $eventStaticMilho])) {
+            DB::table('guests')->insert($guestEventMilho);
+            return response()->json([
+                'success' => 'Evento estatico cadastrado com sucesso'
+            ]);
+        }
+
+        return response()->json([
+            'error' => 'Nao foi possivel cadastrar o evento estatico'
         ], 500);
     }
 
